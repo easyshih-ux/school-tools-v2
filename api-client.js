@@ -66,11 +66,40 @@ function clearSession() {
   apiSession.token = null;
 }
 
+const gate4SimulationTeachers = [
+  {
+    office: "測試處",
+    title: "測試教師",
+    name: "王小明",
+    lineName: "測試帳號01",
+    subject: "測試科目",
+    ext: "T-001",
+    inSmallGroup: "已加入"
+  }
+];
+
 async function updateTeacher(formData) {
+  const fields = ["office", "title", "name", "lineName", "subject", "ext", "inSmallGroup"];
+  const normalized = Object.fromEntries(fields.map((field) => [field, String(formData[field] ?? "").trim()]));
+  const index = gate4SimulationTeachers.findIndex((teacher) => teacher.name.trim() === normalized.name);
+  const action = index === -1 ? "add" : "update";
+  if (action === "update") {
+    const existing = gate4SimulationTeachers[index];
+    gate4SimulationTeachers[index] = Object.fromEntries(fields.map((field) => [
+      field,
+      field === "name" || normalized[field] !== "" ? normalized[field] : existing[field]
+    ]));
+  } else {
+    gate4SimulationTeachers.push({
+      ...normalized,
+      inSmallGroup: normalized.inSmallGroup || "未加入"
+    });
+  }
   return {
-    success: false,
+    success: true,
+    action,
+    simulated: true,
     persisted: false,
-    message: "V2 測試模式：目前不會寫入正式資料。",
-    submittedData: { ...formData }
+    message: `Gate 4A 模擬：成功${action === "update" ? "更新" : "新增"}「${normalized.name}」；未寫入正式資料。`
   };
 }

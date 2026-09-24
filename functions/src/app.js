@@ -44,6 +44,14 @@ function clientIdentifier(request) {
   return request.ip || request.socket?.remoteAddress || "unknown";
 }
 
+function requestBody(request) {
+  if (request.body && typeof request.body === "object") return request.body;
+  if (typeof request.body === "string") {
+    try { return JSON.parse(request.body); } catch { return null; }
+  }
+  return request.body;
+}
+
 function createApi({
   getAccessPassword,
   getSigningKey,
@@ -51,6 +59,7 @@ function createApi({
   allowedOrigins,
   rateLimiter,
   loadSheetData,
+  simulateTeacherUpdate,
   now = () => Date.now()
 }) {
   if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) throw new Error("allowedOrigins is required");
@@ -105,7 +114,12 @@ function createApi({
     }
 
     if (path === "/teachers") {
-      if (request.method !== "GET") {
+      const supportsSimulation = typeof simulateTeacherUpdate === "function";
+      if (request.method !== "GET" && request.method !== "POST") {
+        response.setHeader("Allow", supportsSimulation ? "GET, POST, OPTIONS" : "GET, OPTIONS");
+        return json(response, 405, { error: "method_not_allowed" }, "private, no-store");
+      }
+      if (request.method === "POST" && !supportsSimulation) {
         response.setHeader("Allow", "GET, OPTIONS");
         return json(response, 405, { error: "method_not_allowed" }, "private, no-store");
       }
@@ -121,16 +135,41 @@ function createApi({
       } catch {
         return json(response, 401, { error: "unauthorized" }, "private, no-store");
       }
-      if (typeof loadSheetData !== "function") {
-        return json(response, 503, { error: "sheet_reader_unavailable" }, "private, no-store");
+
+      if (request.method === "GET") {
+        if (typeof loadSheetData !== "function") {
+          return json(response, 503, { error: "sheet_reader_unavailable" }, "private, no-store");
+        }
+        try {
+          const data = await loadSheetData();
+          if (!Array.isArray(data?.teachers)) throw new Error("invalid sheet reader result");
+          return json(response, 200, { teachers: data.teachers }, "private, no-store");
+        } catch (error) {
+          const safeCode = typeof error?.code === "string" ? error.code : "sheet_read_failed";
+          return json(response, 502, { error: safeCode }, "private, no-store");
+        }
       }
+
       try {
-        const data = await loadSheetData();
-        if (!Array.isArray(data?.teachers)) throw new Error("invalid sheet reader result");
-        return json(response, 200, { teachers: data.teachers }, "private, no-store");
-      } catch (error) {
-        const safeCode = typeof error?.code === "string" ? error.code : "sheet_read_failed";
-        return json(response, 502, { error: safeCode }, "private, no-store");
+        const limiterKey = rateLimitKey(`teacher-update:${clientIdentifier(request)}`, getRateLimitKey());
+        const limiterResult = await rateLimiter.consume(limiterKey, now());
+        if (!limiterResult.allowed) {
+          response.setHeader("Retry-After", String(limiterResult.retryAfterSeconds));
+          return json(response, 429, { error: "too_many_attempts" }, "private, no-store");
+        }
+        const result = await simulateTeacherUpdate(requestBody(request));
+        if (!result?.validation?.valid) {
+          return json(response, 400, { error: "validation_failed", details: result?.validation?.errors || [] }, "private, no-store");
+        }
+        return json(response, 200, {
+          success: true,
+          action: result.action === "insert" ? "add" : result.action,
+          message: result.message,
+          simulated: true,
+          persisted: false
+        }, "private, no-store");
+      } catch {
+        return json(response, 500, { error: "update_simulation_failed" }, "private, no-store");
       }
     }
 

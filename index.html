@@ -105,7 +105,7 @@
         <h2 class="modal-title" id="modalTitle"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> 填寫我的資料</h2>
         <button class="btn-close-modal" id="btnCloseModal" type="button" aria-label="關閉視窗"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
-      <p class="test-mode-note"><i class="fa-solid fa-flask" aria-hidden="true"></i> V2 測試模式：送出內容不會寫入正式資料。</p>
+      <p class="test-mode-note"><i class="fa-solid fa-flask" aria-hidden="true"></i> Gate 4A 模擬模式：送出只更新虛構測試 adapter，不會寫入正式資料。</p>
       <form id="teacherForm">
         <div class="form-group">
           <label class="form-label" for="formName">真實姓名 <span>*</span></label>
@@ -136,8 +136,8 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="formExt">分機號碼</label>
-          <input type="text" id="formExt" class="form-control" placeholder="測試資料請使用 T-001 格式" pattern="T-[0-9]{3}" maxlength="5">
-          <div class="form-help">Gate 2 僅接受 T-001 格式的虛構測試分機。</div>
+          <input type="text" id="formExt" class="form-control" placeholder="例如：104">
+          <div class="form-help">Gate 4A 請只使用虛構測試分機；送出不會寫入正式資料。</div>
         </div>
         <div class="form-group">
           <label class="form-label" for="formInSmallGroup">是否已加入「義中人」群組？ <span>*</span></label>
