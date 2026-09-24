@@ -184,4 +184,59 @@ describe("Gate 3A API", () => {
     assert.equal(response.statusCode, 429);
     assert.ok(Number(response.headers["retry-after"]) > 0);
   });
+  test("internal Sheets summary 未授權時不讀取資料", async () => {
+    let called = false;
+    const protectedHandler = createApi({
+      getAccessPassword: () => accessPassword,
+      getSigningKey: () => signingKey,
+      getRateLimitKey: () => rateKey,
+      allowedOrigins: [ALLOWED_ORIGIN],
+      rateLimiter: new MemoryRateLimiter(),
+      loadSheetSummary: async () => { called = true; return {}; },
+      now: () => nowMs
+    });
+    const response = await invoke(protectedHandler, requestMock({ path: "/internal/sheets/summary" }));
+    assert.equal(response.statusCode, 401);
+    assert.equal(called, false);
+  });
+
+  test("internal Sheets summary 只回傳 aggregate", async () => {
+    const summary = { sourceRowCount: 3, mappedRowCount: 2, schema: ["office", "title", "name", "lineName", "subject", "ext", "inSmallGroup"] };
+    const protectedHandler = createApi({
+      getAccessPassword: () => accessPassword,
+      getSigningKey: () => signingKey,
+      getRateLimitKey: () => rateKey,
+      allowedOrigins: [ALLOWED_ORIGIN],
+      rateLimiter: new MemoryRateLimiter(),
+      loadSheetSummary: async () => summary,
+      now: () => nowMs
+    });
+    const token = issueToken({ signingKey, nowSeconds: Math.floor(nowMs / 1000) });
+    const response = await invoke(protectedHandler, requestMock({
+      path: "/internal/sheets/summary",
+      headers: { authorization: `Bearer ${token}` }
+    }));
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(parsed(response), { summary });
+    assert.equal(response.headers["cache-control"], "private, no-store");
+  });
+
+  test("internal Sheets summary 不接受寫入且錯誤明確 fail closed", async () => {
+    const readError = Object.assign(new Error("fixture"), { code: "worksheet_or_range_not_found" });
+    const protectedHandler = createApi({
+      getAccessPassword: () => accessPassword,
+      getSigningKey: () => signingKey,
+      getRateLimitKey: () => rateKey,
+      allowedOrigins: [ALLOWED_ORIGIN],
+      rateLimiter: new MemoryRateLimiter(),
+      loadSheetSummary: async () => { throw readError; },
+      now: () => nowMs
+    });
+    const writeResponse = await invoke(protectedHandler, requestMock({ method: "POST", path: "/internal/sheets/summary" }));
+    assert.equal(writeResponse.statusCode, 405);
+    const token = issueToken({ signingKey, nowSeconds: Math.floor(nowMs / 1000) });
+    const readResponse = await invoke(protectedHandler, requestMock({ path: "/internal/sheets/summary", headers: { authorization: `Bearer ${token}` } }));
+    assert.equal(readResponse.statusCode, 502);
+    assert.deepEqual(parsed(readResponse), { error: "worksheet_or_range_not_found" });
+  });
 });

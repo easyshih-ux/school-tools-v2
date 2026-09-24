@@ -45,7 +45,15 @@ function clientIdentifier(request) {
   return request.ip || request.socket?.remoteAddress || "unknown";
 }
 
-function createApi({ getAccessPassword, getSigningKey, getRateLimitKey, allowedOrigins, rateLimiter, now = () => Date.now() }) {
+function createApi({
+  getAccessPassword,
+  getSigningKey,
+  getRateLimitKey,
+  allowedOrigins,
+  rateLimiter,
+  loadSheetSummary,
+  now = () => Date.now()
+}) {
   if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) throw new Error("allowedOrigins is required");
   if (!rateLimiter || typeof rateLimiter.consume !== "function") throw new Error("rateLimiter is required");
 
@@ -117,6 +125,35 @@ function createApi({ getAccessPassword, getSigningKey, getRateLimitKey, allowedO
       return json(response, 200, { teachers: loadFictionalTeachers() }, "private, no-store");
     }
 
+    if (path === "/internal/sheets/summary") {
+      if (request.method !== "GET") {
+        response.setHeader("Allow", "GET, OPTIONS");
+        return json(response, 405, { error: "method_not_allowed" }, "private, no-store");
+      }
+
+      const token = bearerToken(request.headers?.authorization);
+      if (!token) return json(response, 401, { error: "unauthorized" }, "private, no-store");
+      try {
+        verifyToken(token, {
+          signingKey: getSigningKey(),
+          audience: TOKEN_AUDIENCE,
+          nowSeconds: Math.floor(now() / 1000)
+        });
+      } catch {
+        return json(response, 401, { error: "unauthorized" }, "private, no-store");
+      }
+
+      if (typeof loadSheetSummary !== "function") {
+        return json(response, 503, { error: "sheet_reader_unavailable" }, "private, no-store");
+      }
+      try {
+        const summary = await loadSheetSummary();
+        return json(response, 200, { summary }, "private, no-store");
+      } catch (error) {
+        const safeCode = typeof error?.code === "string" ? error.code : "sheet_read_failed";
+        return json(response, 502, { error: safeCode }, "private, no-store");
+      }
+    }
     return json(response, 404, { error: "not_found" }, "no-store");
   };
 }
