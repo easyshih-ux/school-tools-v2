@@ -108,6 +108,8 @@ h1 { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; background: line
 @keyframes pulse { 50% { transform: scale(1.05); opacity: .95; } }
 
 footer { text-align: center; color: var(--text-muted); margin-top: 3.5rem; font-size: .88rem; }
+footer .pwa-brand { display: inline-block; margin-top: .45rem; padding: .22rem .65rem; border: 1px solid rgba(2, 119, 60, .16); border-radius: 999px; background: rgba(255, 255, 255, .34); color: var(--text-muted); font-size: .72rem; letter-spacing: .035em; backdrop-filter: blur(8px); }
+.dark-theme footer .pwa-brand { border-color: rgba(134, 239, 172, .16); background: rgba(15, 23, 42, .3); color: var(--text-muted); }
 .modal-overlay, .notice-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(15, 23, 42, .55); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility .25s ease; }
 .modal-overlay.active, .notice-overlay.active { opacity: 1; visibility: visible; }
 .modal-container { width: min(600px, 100%); max-height: calc(100vh - 2rem); overflow-y: auto; background: var(--bg-main); border: 1px solid var(--card-border); border-radius: var(--border-radius-lg); padding: 2.2rem; box-shadow: 0 30px 80px rgba(15, 23, 42, .35); transform: translateY(18px) scale(.98); transition: transform .25s ease; }
