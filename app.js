@@ -190,9 +190,26 @@ function closeNotice() {
   elements.openModal.focus();
 }
 
+let teacherSubmitInFlight = false;
+
+function showNotice(message) {
+  elements.noticeMessage.textContent = message;
+  elements.notice.classList.add('active');
+  elements.notice.setAttribute('aria-hidden', 'false');
+  elements.closeNotice.focus();
+}
+
+function safeUpdateErrorMessage(error) {
+  if (error?.status === 400) return '送出的資料格式不正確，請檢查必填欄位後再試。';
+  if (error?.status === 409 && error?.code === 'insert_not_enabled') return '目前僅開放更新既有資料；找不到完全同名的既有資料。';
+  if (error?.status === 429) return '送出次數過多，請稍後再試。';
+  return '目前無法更新資料，請稍後再試。';
+}
+
 async function submitForm(event) {
   event.preventDefault();
-  if (!elements.form.reportValidity()) return;
+  if (teacherSubmitInFlight || !elements.form.reportValidity()) return;
+
   const payload = {
     name: document.getElementById('formName').value.trim(),
     office: document.getElementById('formOffice').value,
@@ -202,14 +219,38 @@ async function submitForm(event) {
     ext: document.getElementById('formExt').value.trim(),
     inSmallGroup: document.getElementById('formInSmallGroup').value
   };
+
+  teacherSubmitInFlight = true;
   elements.submit.disabled = true;
-  const result = await updateTeacher(payload);
-  elements.submit.disabled = false;
-  closeModal();
-  elements.noticeMessage.textContent = result.message;
-  elements.notice.classList.add('active');
-  elements.notice.setAttribute('aria-hidden', 'false');
-  elements.closeNotice.focus();
+  try {
+    const result = await updateTeacher(payload);
+    elements.form.reset();
+    closeModal();
+
+    const refreshed = await refreshTeachers();
+    if (refreshed) {
+      showNotice(result.message || '資料已成功更新。');
+    } else if (elements.authOverlay.classList.contains('active')) {
+      elements.authError.textContent = '資料已更新，但授權已失效；請重新輸入通行密碼以載入最新資料。';
+      elements.authError.hidden = false;
+    } else {
+      showNotice('資料已更新，但目前無法重新載入通訊錄，請稍後重試。');
+    }
+  } catch (error) {
+    if (error instanceof AuthRequiredError) {
+      clearSession();
+      elements.form.reset();
+      closeModal();
+      openAuth();
+      elements.authError.textContent = '授權已失效，請重新輸入校內通行密碼。';
+      elements.authError.hidden = false;
+    } else {
+      showToast(safeUpdateErrorMessage(error));
+    }
+  } finally {
+    teacherSubmitInFlight = false;
+    elements.submit.disabled = false;
+  }
 }
 
 function openAuth() {
