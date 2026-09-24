@@ -74,7 +74,7 @@ describe("Gate 5 Header branding", () => {
     assert.match(html, /<img class="logo-icon" src="icons\/icon-192\.png"/);
     assert.doesNotMatch(html, /fa-address-book/);
     assert.match(html, /義學國中 LINE 帳號查詢/);
-    assert.match(html, /安裝義學 LINE 查詢/);
+    assert.match(html, /一鍵放桌面・下次直接查/);
   });
 });
 describe("Gate 5 visible install experience", () => {
@@ -91,7 +91,8 @@ describe("Gate 5 visible install experience", () => {
     const html = read("index.html");
     assert.match(html, /id="btnInstallApp"[^>]*hidden/);
     assert.match(html, /fa-solid fa-download/);
-    assert.match(html, />\s*安裝義學 LINE 查詢\s*</);
+    assert.match(html, />\s*<i[^>]+><\/i>\s*一鍵放桌面・下次直接查\s*</);
+    assert.match(html, /class="install-helper">免翻 LINE、免找連結<\/p>/);
     assert.match(html, /id="installOverlay"/);
     assert.match(html, /id="btnCopyInstallUrl"/);
     assert.match(html, /rel="canonical" href="https:\/\/easyshih-ux\.github\.io\/school-tools-v2\/"/);
@@ -169,12 +170,12 @@ describe("Gate 5 service worker safety", () => {
 });
 
 describe("Gate 5 frozen boundary and Pages artifact", () => {
-  test("Gate 4 Sheets/schema/write lock 與 Gate 5 manifest/icons/install UI 維持凍結", () => {
+  test("Gate 4 Sheets/schema/write lock 與 Gate 5 manifest/icons/install logic 維持凍結", () => {
     childProcess.execFileSync("git", [
       "diff", "--exit-code", GATE_55_BASELINE, "--",
       "functions/src/sheets-mapper.js", "functions/src/sheets-reader.js", "functions/src/sheets-writer.js",
       "functions/src/teacher-update.js", "functions/src/teachers.js", "functions/src/write-lock.js",
-      "mock-data.js", "manifest.webmanifest", "icons", "styles.css", "pwa.js"
+      "mock-data.js", "manifest.webmanifest", "icons", "pwa.js"
     ], { cwd: ROOT, stdio: "pipe" });
   });
 
