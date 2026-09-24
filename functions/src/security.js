@@ -47,12 +47,14 @@ function sign(unsignedToken, signingKey) {
   return crypto.createHmac("sha256", signingKey).update(unsignedToken).digest("base64url");
 }
 
-function issueToken({ signingKey, nowSeconds = Math.floor(Date.now() / 1000), audience = TOKEN_AUDIENCE, expiresInSeconds = TOKEN_TTL_SECONDS }) {
+function issueToken({ signingKey, nowSeconds = Math.floor(Date.now() / 1000), audience = TOKEN_AUDIENCE, expiresInSeconds = TOKEN_TTL_SECONDS, sessionVersion = "1", sessionKey = "0".repeat(64) }) {
   const header = { alg: "HS256", typ: "JWT" };
   const payload = {
     iss: TOKEN_ISSUER,
     aud: audience,
     sub: "shared-school-access",
+    sid: sessionKey,
+    sv: String(sessionVersion),
     jti: crypto.randomUUID(),
     iat: nowSeconds,
     exp: nowSeconds + expiresInSeconds
@@ -61,7 +63,7 @@ function issueToken({ signingKey, nowSeconds = Math.floor(Date.now() / 1000), au
   return `${unsignedToken}.${sign(unsignedToken, signingKey)}`;
 }
 
-function verifyToken(token, { signingKey, nowSeconds = Math.floor(Date.now() / 1000), audience = TOKEN_AUDIENCE, clockSkewSeconds = 30 } = {}) {
+function verifyToken(token, { signingKey, nowSeconds = Math.floor(Date.now() / 1000), audience = TOKEN_AUDIENCE, expectedSessionVersion = null, clockSkewSeconds = 30 } = {}) {
   if (typeof token !== "string") throw new Error("invalid token");
   const parts = token.split(".");
   if (parts.length !== 3 || parts.some((part) => !part)) throw new Error("invalid token");
@@ -85,6 +87,9 @@ function verifyToken(token, { signingKey, nowSeconds = Math.floor(Date.now() / 1
   }
 
   if (payload.iss !== TOKEN_ISSUER || payload.aud !== audience) throw new Error("invalid token");
+  if (typeof payload.sv !== "string" || !payload.sv || payload.sv.length > 64) throw new Error("invalid token");
+  if (expectedSessionVersion !== null && payload.sv !== String(expectedSessionVersion)) throw new Error("invalid token");
+  if (typeof payload.sid !== "string" || !/^[a-f0-9]{64}$/.test(payload.sid)) throw new Error("invalid token");
   if (!Number.isInteger(payload.iat) || !Number.isInteger(payload.exp)) throw new Error("invalid token");
   if (payload.iat > nowSeconds + clockSkewSeconds) throw new Error("invalid token");
   if (payload.exp <= nowSeconds) throw new Error("invalid token");

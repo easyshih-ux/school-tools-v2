@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const { describe, test } = require("node:test");
 const { createApi } = require("../src/app");
 const { MemoryRateLimiter } = require("../src/rate-limit");
+const { createTestDeviceSessions } = require("./auth-fixture");
 const { issueToken } = require("../src/security");
 const { createTeacherUpdateSimulation } = require("../src/teacher-update");
 
@@ -45,6 +46,9 @@ function setup() {
     getAccessPassword: () => ACCESS_PASSWORD,
     getSigningKey: () => SIGNING_KEY,
     getRateLimitKey: () => RATE_KEY,
+
+    getSessionVersion: () => "1",
+    deviceSessions: createTestDeviceSessions(),
     allowedOrigins: ["https://easyshih-ux.github.io"],
     rateLimiter: new MemoryRateLimiter(),
     simulateTeacherUpdate: (payload) => simulation.apply(payload),
@@ -135,7 +139,10 @@ describe("Gate 4A simulated POST /teachers contract", () => {
       getAccessPassword: () => ACCESS_PASSWORD,
       getSigningKey: () => SIGNING_KEY,
       getRateLimitKey: () => RATE_KEY,
-      allowedOrigins: ["https://easyshih-ux.github.io"],
+
+      getSessionVersion: () => "1",
+      deviceSessions: createTestDeviceSessions(),
+    allowedOrigins: ["https://easyshih-ux.github.io"],
       rateLimiter: new MemoryRateLimiter(),
       now: () => NOW_MS
     });

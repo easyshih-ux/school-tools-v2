@@ -7,6 +7,7 @@ const { DEFAULT_WORKSHEET_NAME, createSheetsReader } = require("./src/sheets-rea
 const { FirestoreRateLimiter } = require("./src/rate-limit");
 const { createSheetsWriteAdapter } = require("./src/sheets-writer");
 const { FirestoreWriteLock } = require("./src/write-lock");
+const { FirestoreDeviceSessions } = require("./src/device-sessions");
 const functionsLogger = require("firebase-functions/logger");
 
 
@@ -17,6 +18,7 @@ const rateLimitKey = defineSecret("SCHOOL_TOOLS_RATE_LIMIT_KEY");
 const worksheetName = defineString("SCHOOL_TOOLS_WORKSHEET_NAME", { default: DEFAULT_WORKSHEET_NAME });
 const allowedOrigins = defineString("SCHOOL_TOOLS_ALLOWED_ORIGINS");
 const writeEnabled = defineString("SCHOOL_TOOLS_WRITE_ENABLED", { default: "false" });
+const sessionVersion = defineString("SCHOOL_TOOLS_SESSION_VERSION", { default: "1" });
 
 let handler;
 let adminInitialized = false;
@@ -43,6 +45,8 @@ function configuredHandler() {
       getAccessPassword: () => accessPassword.value(),
       getSigningKey: () => tokenSigningKey.value(),
       getRateLimitKey: () => rateLimitKey.value(),
+      getSessionVersion: () => sessionVersion.value(),
+      deviceSessions: new FirestoreDeviceSessions(firestore),
       loadSheetData: createSheetsReader({
         getSpreadsheetId: () => spreadsheetId.value(),
         worksheetName: worksheetName.value()

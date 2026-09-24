@@ -1,12 +1,13 @@
 "use strict";
 
-const CACHE_VERSION = "school-tools-v2-shell-v2";
+const CACHE_VERSION = "school-tools-v2-shell-v3";
 const SCOPE_PATH = "/school-tools-v2/";
 const STATIC_ASSETS = Object.freeze([
   SCOPE_PATH,
   `${SCOPE_PATH}index.html`,
   `${SCOPE_PATH}styles.css`,
   `${SCOPE_PATH}config.js`,
+  `${SCOPE_PATH}device-session-store.js`,
   `${SCOPE_PATH}api-client.js`,
   `${SCOPE_PATH}app.js`,
   `${SCOPE_PATH}pwa.js`,
@@ -19,8 +20,8 @@ const STATIC_ASSETS = Object.freeze([
 ]);
 
 function isSensitiveApiPath(pathname) {
-  return pathname === "/auth/session" || pathname === "/teachers" ||
-    pathname.endsWith("/auth/session") || pathname.endsWith("/teachers");
+  const sensitivePaths = ["/auth/session", "/auth/refresh", "/auth/logout", "/teachers"];
+  return sensitivePaths.some((path) => pathname === path || pathname.endsWith(path));
 }
 
 self.addEventListener("install", (event) => {

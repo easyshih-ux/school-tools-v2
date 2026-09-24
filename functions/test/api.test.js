@@ -5,6 +5,7 @@ const crypto = require("node:crypto");
 const { beforeEach, describe, test } = require("node:test");
 const { createApi } = require("../src/app");
 const { MemoryRateLimiter } = require("../src/rate-limit");
+const { createTestDeviceSessions } = require("./auth-fixture");
 const { loadFictionalTeachers } = require("../src/teachers");
 const { TOKEN_TTL_SECONDS, issueToken } = require("../src/security");
 
@@ -59,6 +60,9 @@ describe("Gate 3A API", () => {
       getAccessPassword: () => accessPassword,
       getSigningKey: () => signingKey,
       getRateLimitKey: () => rateKey,
+
+      getSessionVersion: () => "1",
+      deviceSessions: createTestDeviceSessions(),
       allowedOrigins: [ALLOWED_ORIGIN, "http://127.0.0.1:4173"],
       rateLimiter: new MemoryRateLimiter(),
       now: () => nowMs,
@@ -223,6 +227,9 @@ describe("Gate 3A API", () => {
       getAccessPassword: () => accessPassword,
       getSigningKey: () => signingKey,
       getRateLimitKey: () => rateKey,
+
+      getSessionVersion: () => "1",
+      deviceSessions: createTestDeviceSessions(),
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
       loadSheetData: async () => { called = true; return { teachers: [], summary: {} }; },
@@ -239,6 +246,9 @@ describe("Gate 3A API", () => {
       getAccessPassword: () => accessPassword,
       getSigningKey: () => signingKey,
       getRateLimitKey: () => rateKey,
+
+      getSessionVersion: () => "1",
+      deviceSessions: createTestDeviceSessions(),
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
       loadSheetData: async () => ({ teachers: [], summary }),
@@ -260,6 +270,9 @@ describe("Gate 3A API", () => {
       getAccessPassword: () => accessPassword,
       getSigningKey: () => signingKey,
       getRateLimitKey: () => rateKey,
+
+      getSessionVersion: () => "1",
+      deviceSessions: createTestDeviceSessions(),
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
       loadSheetData: async () => { throw readError; },

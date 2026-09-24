@@ -8,6 +8,7 @@ const { describe, test } = require("node:test");
 
 const ROOT = __dirname;
 const BASELINE = "11228e5ca975893706b9c9de8b570b46d5441f57";
+const GATE_55_BASELINE = "2c81cad038e266045c15e5f7772a11572ed058c5";
 const {
   canonicalInstallUrl,
   classifyInstallEnvironment,
@@ -143,7 +144,7 @@ describe("Gate 5 service worker safety", () => {
   const worker = read("sw.js");
 
   test("明確版本 cache 且 activate 刪除舊版本", () => {
-    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v2"/);
+    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v3"/);
     assert.match(worker, /key !== CACHE_VERSION/);
     assert.match(worker, /caches\.delete\(key\)/);
   });
@@ -152,6 +153,8 @@ describe("Gate 5 service worker safety", () => {
     assert.match(worker, /request\.method !== "GET"\) return/);
     assert.match(worker, /url\.origin !== self\.location\.origin \|\| isSensitiveApiPath/);
     assert.match(worker, /"\/auth\/session"/);
+    assert.match(worker, /"\/auth\/refresh"/);
+    assert.match(worker, /"\/auth\/logout"/);
     assert.match(worker, /"\/teachers"/);
     const staticBlock = worker.slice(worker.indexOf("const STATIC_ASSETS"), worker.indexOf("]);", worker.indexOf("const STATIC_ASSETS")) + 3);
     assert.doesNotMatch(staticBlock, /auth\/session|teachers|cloudfunctions/);
@@ -166,16 +169,18 @@ describe("Gate 5 service worker safety", () => {
 });
 
 describe("Gate 5 frozen boundary and Pages artifact", () => {
-  test("API、認證、Sheets、token、rate limit、schema 與前端資料邏輯未變", () => {
+  test("Gate 4 Sheets/schema/write lock 與 Gate 5 manifest/icons/install UI 維持凍結", () => {
     childProcess.execFileSync("git", [
-      "diff", "--exit-code", BASELINE, "--",
-      "functions", "app.js", "api-client.js", "config.js", "mock-data.js", "firebase.json"
+      "diff", "--exit-code", GATE_55_BASELINE, "--",
+      "functions/src/sheets-mapper.js", "functions/src/sheets-reader.js", "functions/src/sheets-writer.js",
+      "functions/src/teacher-update.js", "functions/src/teachers.js", "functions/src/write-lock.js",
+      "mock-data.js", "manifest.webmanifest", "icons", "styles.css", "pwa.js"
     ], { cwd: ROOT, stdio: "pipe" });
   });
 
   test("Pages workflow 只加入 PWA 靜態資產", () => {
     const workflow = read(".github/workflows/pages.yml");
-    for (const asset of ["pwa.js", "sw.js", "manifest.webmanifest", "icons"]) {
+    for (const asset of ["device-session-store.js", "pwa.js", "sw.js", "manifest.webmanifest", "icons"]) {
       assert.match(workflow, new RegExp(asset.replace(".", "\\.")));
     }
     assert.doesNotMatch(workflow, /functions\/|\.env|secret/i);

@@ -342,6 +342,7 @@ document.addEventListener('keydown', (event) => {
 
 async function initialize() {
   setTheme(getSavedTheme() === 'dark' ? 'dark' : 'light');
+  await restoreSession();
   await refreshTeachers();
 }
 

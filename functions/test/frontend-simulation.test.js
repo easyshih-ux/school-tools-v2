@@ -17,8 +17,13 @@ function httpResponse(status, body) {
 function loadAdapter(responses = []) {
   const calls = [];
   const queue = [...responses];
+  let savedCredential = null;
   const context = vm.createContext({
     window: { SCHOOL_TOOLS_CONFIG: { mode: "api", apiBaseUrl: "https://example.invalid/api" } },
+    navigator: {},
+    getDeviceCredential: async () => savedCredential,
+    saveDeviceCredential: async (value) => { savedCredential = value; },
+    clearDeviceCredential: async () => { savedCredential = null; },
     fetch: async (url, options) => {
       calls.push({ url, options });
       if (!queue.length) throw new Error("unexpected fetch");
@@ -30,6 +35,8 @@ function loadAdapter(responses = []) {
   return {
     setToken: (token) => vm.runInContext(`apiSession.token = ${JSON.stringify(token)}`, context),
     token: () => vm.runInContext("apiSession.token", context),
+    setCredential: (value) => { savedCredential = value; },
+    credential: () => savedCredential,
     update: (payload) => vm.runInContext(`updateTeacher(${JSON.stringify(payload)})`, context),
     calls
   };

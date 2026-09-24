@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const { describe, test } = require("node:test");
 const { createApi } = require("../src/app");
 const { MemoryRateLimiter } = require("../src/rate-limit");
+const { createTestDeviceSessions } = require("./auth-fixture");
 const { issueToken } = require("../src/security");
 const { SheetsWriteError } = require("../src/sheets-writer");
 
@@ -31,6 +32,9 @@ function makeHandler(writeTeacher) {
     getAccessPassword: () => "fictional-password-for-gate-4b-tests-only",
     getSigningKey: () => SIGNING_KEY,
     getRateLimitKey: () => RATE_KEY,
+
+    getSessionVersion: () => "1",
+    deviceSessions: createTestDeviceSessions(),
     allowedOrigins: ["https://easyshih-ux.github.io"],
     rateLimiter: new MemoryRateLimiter(),
     writeTeacher,
