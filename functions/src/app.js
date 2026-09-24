@@ -60,6 +60,7 @@ function createApi({
   rateLimiter,
   loadSheetData,
   simulateTeacherUpdate,
+  writeTeacher,
   now = () => Date.now()
 }) {
   if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) throw new Error("allowedOrigins is required");
@@ -114,20 +115,22 @@ function createApi({
     }
 
     if (path === "/teachers") {
+      const supportsWrite = typeof writeTeacher === "function";
       const supportsSimulation = typeof simulateTeacherUpdate === "function";
       if (request.method !== "GET" && request.method !== "POST") {
-        response.setHeader("Allow", supportsSimulation ? "GET, POST, OPTIONS" : "GET, OPTIONS");
+        response.setHeader("Allow", supportsWrite || supportsSimulation ? "GET, POST, OPTIONS" : "GET, OPTIONS");
         return json(response, 405, { error: "method_not_allowed" }, "private, no-store");
       }
-      if (request.method === "POST" && !supportsSimulation) {
+      if (request.method === "POST" && !supportsWrite && !supportsSimulation) {
         response.setHeader("Allow", "GET, OPTIONS");
         return json(response, 405, { error: "method_not_allowed" }, "private, no-store");
       }
 
       const token = bearerToken(request.headers?.authorization);
       if (!token) return json(response, 401, { error: "unauthorized" }, "private, no-store");
+      let tokenClaims;
       try {
-        verifyToken(token, {
+        tokenClaims = verifyToken(token, {
           signingKey: getSigningKey(),
           audience: TOKEN_AUDIENCE,
           nowSeconds: Math.floor(now() / 1000)
@@ -157,19 +160,27 @@ function createApi({
           response.setHeader("Retry-After", String(limiterResult.retryAfterSeconds));
           return json(response, 429, { error: "too_many_attempts" }, "private, no-store");
         }
-        const result = await simulateTeacherUpdate(requestBody(request));
+        const requestHash = rateLimitKey(`audit:${tokenClaims.jti}`, getRateLimitKey());
+        const result = supportsWrite
+          ? await writeTeacher(requestBody(request), { requestHash })
+          : await simulateTeacherUpdate(requestBody(request));
         if (!result?.validation?.valid) {
           return json(response, 400, { error: "validation_failed", details: result?.validation?.errors || [] }, "private, no-store");
         }
         return json(response, 200, {
           success: true,
           action: result.action === "insert" ? "add" : result.action,
-          message: result.message,
-          simulated: true,
-          persisted: false
+          message: supportsWrite ? "資料已成功更新。" : result.message,
+          simulated: !supportsWrite,
+          persisted: supportsWrite
         }, "private, no-store");
-      } catch {
-        return json(response, 500, { error: "update_simulation_failed" }, "private, no-store");
+      } catch (error) {
+        const code = typeof error?.code === "string" ? error.code : "teacher_write_failed";
+        if (code === "insert_not_enabled") {
+          return json(response, 409, { error: code }, "private, no-store");
+        }
+        const status = code === "write_lock_timeout" || code === "write_lock_expired" ? 503 : 502;
+        return json(response, status, { error: code }, "private, no-store");
       }
     }
 

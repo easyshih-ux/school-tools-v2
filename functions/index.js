@@ -5,6 +5,9 @@ const { defineSecret, defineString } = require("firebase-functions/params");
 const { createApi } = require("./src/app");
 const { DEFAULT_WORKSHEET_NAME, createSheetsReader } = require("./src/sheets-reader");
 const { FirestoreRateLimiter } = require("./src/rate-limit");
+const { createSheetsWriteAdapter } = require("./src/sheets-writer");
+const { FirestoreWriteLock } = require("./src/write-lock");
+const functionsLogger = require("firebase-functions/logger");
 
 
 const accessPassword = defineSecret("SCHOOL_TOOLS_TEST_ACCESS_PASSWORD");
@@ -13,6 +16,7 @@ const spreadsheetId = defineSecret("SCHOOL_TOOLS_SPREADSHEET_ID");
 const rateLimitKey = defineSecret("SCHOOL_TOOLS_RATE_LIMIT_KEY");
 const worksheetName = defineString("SCHOOL_TOOLS_WORKSHEET_NAME", { default: DEFAULT_WORKSHEET_NAME });
 const allowedOrigins = defineString("SCHOOL_TOOLS_ALLOWED_ORIGINS");
+const writeEnabled = defineString("SCHOOL_TOOLS_WRITE_ENABLED", { default: "false" });
 
 let handler;
 let adminInitialized = false;
@@ -26,6 +30,15 @@ function configuredHandler() {
       adminInitialized = true;
     }
     const origins = allowedOrigins.value().split(",").map((origin) => origin.trim()).filter(Boolean);
+    const firestore = getFirestore();
+    const writer = writeEnabled.value() === "true"
+      ? createSheetsWriteAdapter({
+          getSpreadsheetId: () => spreadsheetId.value(),
+          lock: new FirestoreWriteLock(firestore),
+          logger: functionsLogger,
+          allowInsert: false
+        })
+      : null;
     handler = createApi({
       getAccessPassword: () => accessPassword.value(),
       getSigningKey: () => tokenSigningKey.value(),
@@ -35,7 +48,8 @@ function configuredHandler() {
         worksheetName: worksheetName.value()
       }),
       allowedOrigins: origins,
-      rateLimiter: new FirestoreRateLimiter(getFirestore())
+      rateLimiter: new FirestoreRateLimiter(firestore),
+      writeTeacher: writer?.write
     });
   }
   return handler;
