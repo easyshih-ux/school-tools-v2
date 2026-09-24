@@ -33,3 +33,13 @@ node_modules/
 dist/
 build/
 coverage/
+
+# Firebase local-only configuration and emulator state
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+functions/.secret.local
+functions/.env
+functions/.env.*
+!functions/.env.example

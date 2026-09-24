@@ -81,6 +81,23 @@
     <footer><p>© 義學國中 LINE 帳號查詢系統</p></footer>
   </div>
 
+  <div class="modal-overlay auth-overlay" id="authOverlay" aria-hidden="true">
+    <div class="modal-container auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="auth-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+      <h2 class="modal-title" id="authTitle">校內通行驗證</h2>
+      <p class="auth-description">請輸入校內共用通行密碼以載入通訊錄。</p>
+      <form id="authForm">
+        <div class="form-group">
+          <label class="form-label" for="accessPassword">通行密碼 <span>*</span></label>
+          <input type="password" id="accessPassword" class="form-control" required maxlength="256" autocomplete="current-password">
+        </div>
+        <p class="auth-error" id="authError" role="alert" hidden></p>
+        <button type="submit" class="btn-submit auth-submit" id="authSubmit">
+          <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> 驗證並載入
+        </button>
+      </form>
+    </div>
+  </div>
   <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
     <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header">
@@ -145,7 +162,9 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
   <script src="mock-data.js"></script>
+  <script src="api-client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

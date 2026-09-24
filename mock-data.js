@@ -12,7 +12,7 @@ const MOCK_TEACHERS = Object.freeze([
   { id: 'mock-10', name: '郭示意', office: '其他', title: '測試職稱', lineName: '測試帳號10', subject: '測試業務G', ext: 'T-010', inSmallGroup: '未加入' }
 ]);
 
-async function loadTeachers() {
+async function loadMockTeachers() {
   return MOCK_TEACHERS.map((teacher) => ({ ...teacher }));
 }
 

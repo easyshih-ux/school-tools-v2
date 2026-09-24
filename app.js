@@ -20,6 +20,11 @@ const elements = {
   notice: document.getElementById('noticeOverlay'),
   noticeMessage: document.getElementById('noticeMessage'),
   closeNotice: document.getElementById('btnCloseNotice'),
+  authOverlay: document.getElementById('authOverlay'),
+  authForm: document.getElementById('authForm'),
+  authPassword: document.getElementById('accessPassword'),
+  authSubmit: document.getElementById('authSubmit'),
+  authError: document.getElementById('authError'),
   toast: document.getElementById('toast')
 };
 
@@ -207,6 +212,64 @@ async function submitForm(event) {
   elements.closeNotice.focus();
 }
 
+function openAuth() {
+  elements.authError.hidden = true;
+  elements.authError.textContent = '';
+  elements.authOverlay.classList.add('active');
+  elements.authOverlay.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  elements.authPassword.focus();
+}
+
+function closeAuth() {
+  elements.authOverlay.classList.remove('active');
+  elements.authOverlay.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  elements.authPassword.value = '';
+}
+
+async function refreshTeachers() {
+  try {
+    state.teachers = await loadTeachers();
+    renderCards();
+    elements.skeleton.hidden = true;
+    elements.cards.hidden = false;
+    return true;
+  } catch (error) {
+    if (error instanceof AuthRequiredError) {
+      openAuth();
+      return false;
+    }
+    elements.skeleton.hidden = true;
+    elements.cards.hidden = false;
+    elements.stats.textContent = '目前無法載入通訊錄，請稍後再試。';
+    return false;
+  }
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  if (!elements.authForm.reportValidity()) return;
+  elements.authSubmit.disabled = true;
+  elements.authError.hidden = true;
+  try {
+    await createSession(elements.authPassword.value);
+    const loaded = await refreshTeachers();
+    if (loaded) closeAuth();
+  } catch (error) {
+    clearSession();
+    elements.authError.textContent = error.status === 401
+      ? '通行密碼不正確，請重新輸入。'
+      : error.status === 429
+        ? '嘗試次數過多，請稍後再試。'
+        : '目前無法完成驗證，請稍後再試。';
+    elements.authError.hidden = false;
+    elements.authPassword.select();
+  } finally {
+    elements.authSubmit.disabled = false;
+  }
+}
+
 elements.theme.addEventListener('click', () => {
   const next = elements.body.classList.contains('dark-theme') ? 'light' : 'dark';
   setTheme(next);
@@ -227,6 +290,7 @@ elements.closeModal.addEventListener('click', closeModal);
 elements.cancel.addEventListener('click', closeModal);
 elements.modal.addEventListener('click', (event) => { if (event.target === elements.modal) closeModal(); });
 elements.form.addEventListener('submit', submitForm);
+elements.authForm.addEventListener('submit', submitAuth);
 elements.closeNotice.addEventListener('click', closeNotice);
 elements.notice.addEventListener('click', (event) => { if (event.target === elements.notice) closeNotice(); });
 document.addEventListener('keydown', (event) => {
@@ -237,15 +301,7 @@ document.addEventListener('keydown', (event) => {
 
 async function initialize() {
   setTheme(getSavedTheme() === 'dark' ? 'dark' : 'light');
-  try {
-    state.teachers = await loadTeachers();
-    renderCards();
-  } catch {
-    elements.stats.textContent = '無法載入測試資料';
-  } finally {
-    elements.skeleton.hidden = true;
-    elements.cards.hidden = false;
-  }
+  await refreshTeachers();
 }
 
 initialize();

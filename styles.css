@@ -141,3 +141,13 @@ footer { text-align: center; color: var(--text-muted); margin-top: 3.5rem; font-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.auth-overlay { z-index: 1200; }
+.auth-card { width: min(440px, 100%); text-align: center; overflow: visible; }
+.auth-card .modal-title { justify-content: center; margin-bottom: .65rem; }
+.auth-icon { width: 66px; height: 66px; margin: 0 auto 1rem; border-radius: 50%; display: grid; place-items: center; color: white; font-size: 1.65rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); box-shadow: 0 12px 28px rgba(79, 70, 229, .28); }
+.auth-description { color: var(--text-muted); line-height: 1.6; margin-bottom: 1.35rem; }
+.auth-card .form-group { text-align: left; }
+.auth-submit { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.auth-error { color: #be123c; background: rgba(244, 63, 94, .09); border: 1px solid rgba(244, 63, 94, .18); border-radius: 9px; padding: .7rem .8rem; margin: -.25rem 0 1rem; font-weight: 600; font-size: .88rem; text-align: left; }
+.dark-theme .auth-error { color: #fda4af; }
