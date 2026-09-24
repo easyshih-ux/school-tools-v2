@@ -10,7 +10,7 @@ const { FirestoreWriteLock } = require("./src/write-lock");
 const functionsLogger = require("firebase-functions/logger");
 
 
-const accessPassword = defineSecret("SCHOOL_TOOLS_TEST_ACCESS_PASSWORD");
+const accessPassword = defineSecret("SCHOOL_TOOLS_ACCESS_PASSWORD");
 const tokenSigningKey = defineSecret("SCHOOL_TOOLS_TOKEN_SIGNING_KEY");
 const spreadsheetId = defineSecret("SCHOOL_TOOLS_SPREADSHEET_ID");
 const rateLimitKey = defineSecret("SCHOOL_TOOLS_RATE_LIMIT_KEY");

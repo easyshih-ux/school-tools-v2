@@ -97,6 +97,37 @@ describe("Gate 3A API", () => {
     assert.equal(payload.exp - payload.iat, 1800);
   });
 
+
+  test("不同大小寫的正確 mock 密碼仍核發 token", async () => {
+    const response = await invoke(handler, requestMock({
+      method: "POST",
+      path: "/auth/session",
+      body: { password: accessPassword.toUpperCase() }
+    }));
+    assert.equal(response.statusCode, 200);
+    assert.equal(parsed(response).expiresIn, TOKEN_TTL_SECONDS);
+  });
+
+  test("正確 mock 密碼前後空白會 trim", async () => {
+    const response = await invoke(handler, requestMock({
+      method: "POST",
+      path: "/auth/session",
+      body: { password: `  ${accessPassword}  ` }
+    }));
+    assert.equal(response.statusCode, 200);
+    const payload = decodePayload(parsed(response).token);
+    assert.equal(payload.exp - payload.iat, 1800);
+  });
+
+  test("純空白密碼回傳 400", async () => {
+    const response = await invoke(handler, requestMock({
+      method: "POST",
+      path: "/auth/session",
+      body: { password: "   " }
+    }));
+    assert.equal(response.statusCode, 400);
+  });
+
   test("token 不含密碼或人員資料", async () => {
     const body = parsed(await authenticate());
     const payload = decodePayload(body.token);

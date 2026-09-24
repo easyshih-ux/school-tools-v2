@@ -99,7 +99,7 @@ function createApi({
       }
 
       const password = passwordFrom(request);
-      if (typeof password !== "string" || password.length === 0 || password.length > 256) {
+      if (typeof password !== "string" || password.trim().length === 0 || password.length > 256) {
         return json(response, 400, { error: "password_required" }, "no-store");
       }
 

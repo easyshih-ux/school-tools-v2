@@ -28,9 +28,18 @@ function safeEqual(left, right) {
   return crypto.timingSafeEqual(leftDigest, rightDigest);
 }
 
+function requireAccessPassword(value) {
+  if (typeof value !== "string" || value.trim().length < 8) {
+    throw new Error("ACCESS_PASSWORD is unavailable or too short");
+  }
+  return value.trim();
+}
+
 function passwordMatches(candidate, configuredPassword) {
-  requireSecret(configuredPassword, "ACCESS_PASSWORD");
-  return typeof candidate === "string" && safeEqual(candidate, configuredPassword);
+  const expected = requireAccessPassword(configuredPassword).toLocaleLowerCase("en-US");
+  if (typeof candidate !== "string") return false;
+  const supplied = candidate.trim().toLocaleLowerCase("en-US");
+  return supplied.length > 0 && safeEqual(supplied, expected);
 }
 
 function sign(unsignedToken, signingKey) {
