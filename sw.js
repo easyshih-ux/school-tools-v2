@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION = "school-tools-v2-shell-v1";
+const CACHE_VERSION = "school-tools-v2-shell-v2";
 const SCOPE_PATH = "/school-tools-v2/";
 const STATIC_ASSETS = Object.freeze([
   SCOPE_PATH,

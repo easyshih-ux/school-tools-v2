@@ -8,6 +8,12 @@ const { describe, test } = require("node:test");
 
 const ROOT = __dirname;
 const BASELINE = "11228e5ca975893706b9c9de8b570b46d5441f57";
+const {
+  canonicalInstallUrl,
+  classifyInstallEnvironment,
+  installGuideFor,
+  shouldShowInstallButton
+} = require("./pwa.js");
 
 function read(file) {
   return fs.readFileSync(path.join(ROOT, file), "utf8");
@@ -61,11 +67,74 @@ describe("Gate 5 PWA manifest and metadata", () => {
   });
 });
 
+describe("Gate 5 visible install experience", () => {
+  const androidChrome = classifyInstallEnvironment({
+    userAgent: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36",
+    vendor: "Google Inc."
+  });
+  const iphoneSafari = classifyInstallEnvironment({
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+    vendor: "Apple Computer, Inc."
+  });
+
+  test("Header 含安裝按鈕、icon、引導 dialog 與 staging canonical URL", () => {
+    const html = read("index.html");
+    assert.match(html, /id="btnInstallApp"[^>]*hidden/);
+    assert.match(html, /fa-solid fa-download/);
+    assert.match(html, />\s*安裝義學 LINE 查詢\s*</);
+    assert.match(html, /id="installOverlay"/);
+    assert.match(html, /id="btnCopyInstallUrl"/);
+    assert.match(html, /rel="canonical" href="https:\/\/easyshih-ux\.github\.io\/school-tools-v2\/"/);
+  });
+
+  test("Android Chrome 有 native prompt 時直接安裝，尚無 event 時仍提供說明", () => {
+    assert.equal(androidChrome.kind, "android-chrome");
+    assert.equal(shouldShowInstallButton(androidChrome, true, false), true);
+    assert.equal(shouldShowInstallButton(androidChrome, false, false), true);
+    assert.match(installGuideFor(androidChrome), /Chrome.*安裝應用程式|Chrome.*加到主畫面/);
+    const script = read("pwa.js");
+    assert.match(script, /beforeinstallprompt/);
+    assert.match(script, /await prompt\.prompt\(\)/);
+  });
+
+  test("iPhone Safari 顯示指定加入主畫面教學", () => {
+    assert.equal(iphoneSafari.kind, "ios-safari");
+    assert.equal(shouldShowInstallButton(iphoneSafari, false, false), true);
+    assert.equal(installGuideFor(iphoneSafari), "點選 Safari「分享」→「加入主畫面」");
+  });
+
+  test("LINE/in-app browser 顯示平台引導及複製 staging URL", () => {
+    const androidLine = classifyInstallEnvironment({
+      userAgent: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36 Line/15.0.0",
+      vendor: "Google Inc."
+    });
+    const iosLine = classifyInstallEnvironment({
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Line/15.0.0"
+    });
+    assert.equal(androidLine.kind, "in-app");
+    assert.equal(iosLine.kind, "in-app");
+    assert.match(installGuideFor(androidLine), /Chrome/);
+    assert.match(installGuideFor(iosLine), /Safari/);
+    assert.equal(canonicalInstallUrl({ origin: "https://easyshih-ux.github.io" }), "https://easyshih-ux.github.io/school-tools-v2/");
+    assert.match(read("pwa.js"), /navigatorObject\.clipboard\.writeText\(url\)/);
+  });
+
+  test("standalone 隱藏；desktop 僅在瀏覽器提供 native prompt 時顯示", () => {
+    const desktop = classifyInstallEnvironment({
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36",
+      vendor: "Google Inc."
+    });
+    assert.equal(desktop.kind, "desktop-or-unsupported");
+    assert.equal(shouldShowInstallButton(androidChrome, true, true), false);
+    assert.equal(shouldShowInstallButton(desktop, false, false), false);
+    assert.equal(shouldShowInstallButton(desktop, true, false), true);
+  });
+});
 describe("Gate 5 service worker safety", () => {
   const worker = read("sw.js");
 
   test("明確版本 cache 且 activate 刪除舊版本", () => {
-    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v1"/);
+    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v2"/);
     assert.match(worker, /key !== CACHE_VERSION/);
     assert.match(worker, /caches\.delete\(key\)/);
   });

@@ -12,6 +12,7 @@
   <title>義學國中 LINE 帳號查詢與自填系統</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="canonical" href="https://easyshih-ux.github.io/school-tools-v2/">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +42,11 @@
       <p class="subtitle">全校同仁專屬通訊錄 • 隨手查、方便加，新進人員可即時自填與更新</p>
       <div class="group-tip">
         <span>💡 名字下有「<span class="group-tip-badge"><i class="fa-solid fa-users" aria-hidden="true"></i> 義中人</span>」＝ 可直接到「義中人」群組聯繫</span>
+      </div>
+      <div class="install-action">
+        <button class="btn-install-app" id="btnInstallApp" type="button" hidden>
+          <i class="fa-solid fa-download" aria-hidden="true"></i> 安裝義學 LINE 查詢
+        </button>
       </div>
     </header>
 
@@ -89,6 +95,19 @@
     <footer><p>© 義學國中 LINE 帳號查詢系統</p><p class="pwa-brand">Made by WenYi</p></footer>
   </div>
 
+  <div class="modal-overlay install-overlay" id="installOverlay" aria-hidden="true">
+    <div class="modal-container install-card" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="installGuideTitle"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> 安裝義學 LINE 查詢</h2>
+        <button class="btn-close-modal" id="btnCloseInstallGuide" type="button" aria-label="關閉安裝說明"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <p class="install-guide-text" id="installGuideText"></p>
+      <div class="install-guide-actions">
+        <button type="button" class="btn-secondary" id="btnCopyInstallUrl" hidden><i class="fa-regular fa-copy" aria-hidden="true"></i> 複製網址</button>
+      </div>
+      <p class="install-copy-status" id="installCopyStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
   <div class="modal-overlay auth-overlay" id="authOverlay" aria-hidden="true">
     <div class="modal-container auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
       <div class="auth-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>

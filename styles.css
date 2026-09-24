@@ -121,6 +121,17 @@ footer .pwa-brand { display: inline-block; margin-top: .45rem; padding: .22rem .
 .notice-card { width: min(420px, 100%); text-align: center; background: var(--bg-main); color: var(--text-main); border-radius: var(--border-radius-lg); padding: 2rem; box-shadow: 0 30px 80px rgba(15, 23, 42, .35); }.notice-icon { color: var(--primary-color); font-size: 3rem; margin-bottom: .8rem; }.notice-card h2 { margin-bottom: .7rem; }.notice-card p { color: var(--text-muted); margin-bottom: 1.4rem; }
 .toast { position: fixed; z-index: 1500; top: 1.5rem; right: 1.5rem; max-width: min(360px, calc(100vw - 2rem)); background: var(--card-bg); color: var(--text-main); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: var(--shadow-hover); padding: .9rem 1.1rem; transform: translateY(-20px); opacity: 0; pointer-events: none; transition: all .25s ease; backdrop-filter: blur(16px); }.toast.visible { transform: none; opacity: 1; }
 
+.install-action { display: flex; justify-content: center; margin-top: -1rem; }
+.btn-install-app { display: inline-flex; align-items: center; justify-content: center; gap: .65rem; padding: .72rem 1.2rem; border: 1px solid rgba(2, 119, 60, .22); border-radius: 999px; background: rgba(255, 255, 255, .48); color: #02773c; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px -12px rgba(2, 119, 60, .42); backdrop-filter: blur(14px); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.btn-install-app:hover { transform: translateY(-2px); border-color: rgba(2, 119, 60, .5); box-shadow: 0 13px 28px -12px rgba(2, 119, 60, .55); }
+.dark-theme .btn-install-app { background: rgba(15, 23, 42, .58); border-color: rgba(134, 239, 172, .22); color: #86efac; }
+.install-overlay { z-index: 1250; }
+.install-card { width: min(480px, 100%); background: var(--bg-container); backdrop-filter: blur(24px); }
+.install-guide-text { color: var(--text-muted); font-size: 1rem; line-height: 1.75; white-space: pre-line; }
+.install-guide-actions { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
+.install-guide-actions .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
+.install-copy-status { min-height: 1.4em; margin-top: .75rem; color: #02773c; font-size: .86rem; font-weight: 700; }
+.dark-theme .install-copy-status { color: #86efac; }
 @media (max-width: 768px) {
   body { padding: 2rem 1rem; }
   header { margin-bottom: 2.2rem; padding-top: 1.8rem; }
@@ -129,6 +140,7 @@ footer .pwa-brand { display: inline-block; margin-top: .45rem; padding: .22rem .
   .logo-icon { font-size: 2.2rem; }
   .subtitle { font-size: 1rem; line-height: 1.6; }
   .group-tip { line-height: 1.5; }
+  .btn-install-app { width: 100%; max-width: 360px; }
   .controls-wrapper { padding: 1.2rem; }
   .filter-tags-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .4rem; scrollbar-width: thin; }
   .filter-tag { flex: 0 0 auto; }
