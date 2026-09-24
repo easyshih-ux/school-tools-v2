@@ -133,7 +133,7 @@ function renderCards() {
   elements.clearSearch.classList.toggle('visible', Boolean(query));
   elements.stats.textContent = query || state.office !== 'all'
     ? `篩選出 ${teachers.length} 筆符合的資料 (全部共 ${state.teachers.length} 筆)`
-    : `目前共計 ${state.teachers.length} 筆測試資料`;
+    : `目前共計 ${state.teachers.length} 筆資料`;
 
   if (!teachers.length) {
     const empty = document.createElement('div');

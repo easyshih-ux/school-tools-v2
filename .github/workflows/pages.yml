@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html styles.css mock-data.js api-client.js config.js app.js _site/
+          cp index.html styles.css api-client.js config.js app.js _site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

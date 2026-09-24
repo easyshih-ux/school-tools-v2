@@ -30,7 +30,7 @@ function configuredHandler() {
       getAccessPassword: () => accessPassword.value(),
       getSigningKey: () => tokenSigningKey.value(),
       getRateLimitKey: () => rateLimitKey.value(),
-      loadSheetSummary: createSheetsReader({
+      loadSheetData: createSheetsReader({
         getSpreadsheetId: () => spreadsheetId.value(),
         worksheetName: worksheetName.value()
       }),

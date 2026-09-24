@@ -9,7 +9,6 @@ const {
   rateLimitKey,
   verifyToken
 } = require("./security");
-const { loadFictionalTeachers } = require("./teachers");
 
 function setCorsHeaders(response, origin, allowedOrigins) {
   response.setHeader("Vary", "Origin");
@@ -51,7 +50,7 @@ function createApi({
   getRateLimitKey,
   allowedOrigins,
   rateLimiter,
-  loadSheetSummary,
+  loadSheetData,
   now = () => Date.now()
 }) {
   if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) throw new Error("allowedOrigins is required");
@@ -122,7 +121,17 @@ function createApi({
       } catch {
         return json(response, 401, { error: "unauthorized" }, "private, no-store");
       }
-      return json(response, 200, { teachers: loadFictionalTeachers() }, "private, no-store");
+      if (typeof loadSheetData !== "function") {
+        return json(response, 503, { error: "sheet_reader_unavailable" }, "private, no-store");
+      }
+      try {
+        const data = await loadSheetData();
+        if (!Array.isArray(data?.teachers)) throw new Error("invalid sheet reader result");
+        return json(response, 200, { teachers: data.teachers }, "private, no-store");
+      } catch (error) {
+        const safeCode = typeof error?.code === "string" ? error.code : "sheet_read_failed";
+        return json(response, 502, { error: safeCode }, "private, no-store");
+      }
     }
 
     if (path === "/internal/sheets/summary") {
@@ -143,11 +152,11 @@ function createApi({
         return json(response, 401, { error: "unauthorized" }, "private, no-store");
       }
 
-      if (typeof loadSheetSummary !== "function") {
+      if (typeof loadSheetData !== "function") {
         return json(response, 503, { error: "sheet_reader_unavailable" }, "private, no-store");
       }
       try {
-        const summary = await loadSheetSummary();
+        const { summary } = await loadSheetData();
         return json(response, 200, { summary }, "private, no-store");
       } catch (error) {
         const safeCode = typeof error?.code === "string" ? error.code : "sheet_read_failed";

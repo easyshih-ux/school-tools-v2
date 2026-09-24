@@ -1,7 +1,7 @@
 "use strict";
 
 const { GoogleAuth } = require("google-auth-library");
-const { summarizeTeacherRows } = require("./sheets-mapper");
+const { mapTeacherRows, summarizeTeacherRows } = require("./sheets-mapper");
 
 const SHEETS_READONLY_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 const DEFAULT_WORKSHEET_NAME = "LINE帳號資料";
@@ -53,7 +53,7 @@ function createSheetsReader({
   worksheetName = DEFAULT_WORKSHEET_NAME
 } = {}) {
   if (typeof getSpreadsheetId !== "function") throw new TypeError("getSpreadsheetId is required");
-  return async function readSheetSummary() {
+  return async function readSheetData() {
     const spreadsheetId = requireSpreadsheetId(getSpreadsheetId());
     const range = sheetRange(worksheetName);
     try {
@@ -69,7 +69,11 @@ function createSheetsReader({
       });
       const values = response?.data?.values;
       if (values !== undefined && !Array.isArray(values)) throw new SheetsReadError("sheets_response_invalid");
-      return summarizeTeacherRows(values || []);
+      const rows = values || [];
+      return {
+        teachers: mapTeacherRows(rows),
+        summary: summarizeTeacherRows(rows)
+      };
     } catch (error) {
       if (error instanceof SheetsReadError) throw error;
       throw new SheetsReadError(errorCode(error), error);

@@ -18,7 +18,7 @@ class ApiRequestError extends Error {
 }
 
 function apiConfig() {
-  return window.SCHOOL_TOOLS_CONFIG || { mode: "mock", apiBaseUrl: "" };
+  return window.SCHOOL_TOOLS_CONFIG || { mode: "disabled", apiBaseUrl: "" };
 }
 
 function apiUrl(path) {
@@ -34,7 +34,7 @@ async function parseResponse(response) {
 }
 
 async function createSession(password) {
-  if (apiConfig().mode !== "api") return { mock: true };
+  if (apiConfig().mode !== "api") throw new ApiRequestError("API mode required", 0);
   const response = await fetch(apiUrl("/auth/session"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -47,7 +47,7 @@ async function createSession(password) {
 }
 
 async function loadTeachers() {
-  if (apiConfig().mode !== "api") return loadMockTeachers();
+  if (apiConfig().mode !== "api") throw new ApiRequestError("API mode required", 0);
   if (!apiSession.token) throw new AuthRequiredError();
   const response = await fetch(apiUrl("/teachers"), {
     method: "GET",
@@ -64,4 +64,13 @@ async function loadTeachers() {
 
 function clearSession() {
   apiSession.token = null;
+}
+
+async function updateTeacher(formData) {
+  return {
+    success: false,
+    persisted: false,
+    message: "V2 測試模式：目前不會寫入正式資料。",
+    submittedData: { ...formData }
+  };
 }

@@ -50,6 +50,7 @@ describe("Gate 3B-1 Sheets mapper", () => {
     assert.equal(summary.sourceRowCount, 3);
     assert.equal(summary.mappedRowCount, 2);
     assert.equal(summary.skippedBlankNameCount, 1);
+    assert.equal(summary.officeCount, 1);
     assert.equal(summary.mappingValid, true);
     assert.equal(summary.emptyByField.lineName, 1);
     assert.equal(summary.inSmallGroupTypes.booleanTrue, 1);

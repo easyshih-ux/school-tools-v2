@@ -16,12 +16,13 @@ describe("Gate 3B-1 Sheets reader", () => {
       getSpreadsheetId: () => "fixture_spreadsheet_identifier_12345",
       worksheetName: "LINE帳號資料"
     });
-    const summary = await reader();
+    const data = await reader();
     assert.equal(request.method, "GET");
     assert.match(request.url, /^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\//);
     assert.equal(request.params.valueRenderOption, "UNFORMATTED_VALUE");
-    assert.equal(summary.mappedRowCount, 1);
-    assert.equal(JSON.stringify(summary).includes("虛構姓名"), false);
+    assert.equal(data.teachers.length, 1);
+    assert.equal(data.summary.mappedRowCount, 1);
+    assert.equal(JSON.stringify(data.summary).includes("虛構姓名"), false);
   });
 
   test("worksheet 名稱安全轉成 A2:G range", () => {

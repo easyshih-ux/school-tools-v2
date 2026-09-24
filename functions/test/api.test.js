@@ -5,6 +5,7 @@ const crypto = require("node:crypto");
 const { beforeEach, describe, test } = require("node:test");
 const { createApi } = require("../src/app");
 const { MemoryRateLimiter } = require("../src/rate-limit");
+const { loadFictionalTeachers } = require("../src/teachers");
 const { TOKEN_TTL_SECONDS, issueToken } = require("../src/security");
 
 const ALLOWED_ORIGIN = "https://easyshih-ux.github.io";
@@ -60,7 +61,8 @@ describe("Gate 3A API", () => {
       getRateLimitKey: () => rateKey,
       allowedOrigins: [ALLOWED_ORIGIN, "http://127.0.0.1:4173"],
       rateLimiter: new MemoryRateLimiter(),
-      now: () => nowMs
+      now: () => nowMs,
+      loadSheetData: async () => ({ teachers: loadFictionalTeachers(), summary: {} })
     });
   });
 
@@ -133,7 +135,7 @@ describe("Gate 3A API", () => {
     assert.equal(response.statusCode, 401);
   });
 
-  test("valid token 回傳虛構 teacher schema", async () => {
+  test("valid token 只回傳 reader 提供的 teacher schema", async () => {
     const token = parsed(await authenticate()).token;
     const response = await invoke(handler, requestMock({ path: "/teachers", headers: { authorization: `Bearer ${token}` } }));
     const body = parsed(response);
@@ -192,7 +194,7 @@ describe("Gate 3A API", () => {
       getRateLimitKey: () => rateKey,
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
-      loadSheetSummary: async () => { called = true; return {}; },
+      loadSheetData: async () => { called = true; return { teachers: [], summary: {} }; },
       now: () => nowMs
     });
     const response = await invoke(protectedHandler, requestMock({ path: "/internal/sheets/summary" }));
@@ -208,7 +210,7 @@ describe("Gate 3A API", () => {
       getRateLimitKey: () => rateKey,
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
-      loadSheetSummary: async () => summary,
+      loadSheetData: async () => ({ teachers: [], summary }),
       now: () => nowMs
     });
     const token = issueToken({ signingKey, nowSeconds: Math.floor(nowMs / 1000) });
@@ -229,7 +231,7 @@ describe("Gate 3A API", () => {
       getRateLimitKey: () => rateKey,
       allowedOrigins: [ALLOWED_ORIGIN],
       rateLimiter: new MemoryRateLimiter(),
-      loadSheetSummary: async () => { throw readError; },
+      loadSheetData: async () => { throw readError; },
       now: () => nowMs
     });
     const writeResponse = await invoke(protectedHandler, requestMock({ method: "POST", path: "/internal/sheets/summary" }));

@@ -81,6 +81,7 @@ function summarizeTeacherRows(rows) {
     sourceRowCount: rows.length,
     mappedRowCount: teachers.length,
     skippedBlankNameCount: rows.length - teachers.length,
+    officeCount: new Set(teachers.map((teacher) => teacher.office).filter(Boolean)).size,
     schema: [...TEACHER_FIELDS],
     mappingValid: teachers.every((teacher) =>
       Object.keys(teacher).length === TEACHER_FIELDS.length && TEACHER_FIELDS.every((field) => Object.hasOwn(teacher, field))
