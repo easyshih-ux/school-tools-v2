@@ -67,6 +67,15 @@ describe("Gate 5 PWA manifest and metadata", () => {
   });
 });
 
+describe("Gate 5 Header branding", () => {
+  test("使用既有正式 App icon 且不再顯示通訊錄 icon", () => {
+    const html = read("index.html");
+    assert.match(html, /<img class="logo-icon" src="icons\/icon-192\.png"/);
+    assert.doesNotMatch(html, /fa-address-book/);
+    assert.match(html, /義學國中 LINE 帳號查詢/);
+    assert.match(html, /安裝義學 LINE 查詢/);
+  });
+});
 describe("Gate 5 visible install experience", () => {
   const androidChrome = classifyInstallEnvironment({
     userAgent: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36",

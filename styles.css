@@ -51,7 +51,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
 header { text-align: center; margin-bottom: 3.5rem; }
 .title-wrapper { display: inline-flex; align-items: center; gap: 16px; margin-bottom: .8rem; }
-.logo-icon { font-size: 2.8rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 10px rgba(99, 102, 241, .2)); animation: pulse 2.5s infinite; }
+.logo-icon { width: 56px; height: 56px; flex: 0 0 56px; display: block; border-radius: 14px; object-fit: cover; filter: drop-shadow(0 6px 12px rgba(15, 23, 42, .16)); }
 h1 { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .subtitle { color: var(--text-muted); font-size: 1.15rem; margin-bottom: 2rem; font-weight: 500; letter-spacing: .5px; }
 .group-tip { color: #6366f1; font-size: .95rem; margin-top: -1.2rem; margin-bottom: 2rem; font-weight: 600; letter-spacing: .5px; display: inline-flex; align-items: center; background: rgba(99, 102, 241, .06); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(99, 102, 241, .15); }
@@ -137,7 +137,7 @@ footer .pwa-brand { display: inline-block; margin-top: .45rem; padding: .22rem .
   header { margin-bottom: 2.2rem; padding-top: 1.8rem; }
   .title-wrapper { gap: 10px; }
   h1 { font-size: 2rem; }
-  .logo-icon { font-size: 2.2rem; }
+  .logo-icon { width: 44px; height: 44px; flex-basis: 44px; border-radius: 11px; }
   .subtitle { font-size: 1rem; line-height: 1.6; }
   .group-tip { line-height: 1.5; }
   .btn-install-app { width: 100%; max-width: 360px; }
