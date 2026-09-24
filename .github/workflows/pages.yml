@@ -1,0 +1,44 @@
+name: Deploy V2 staging to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout V2 repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build static staging artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html styles.css mock-data.js api-client.js config.js app.js _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy V2 staging
+        uses: actions/deploy-pages@v4
