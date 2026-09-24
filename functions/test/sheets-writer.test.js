@@ -169,4 +169,31 @@ describe("Gate 4B Sheets write adapter", () => {
     assert.equal(serialized.includes("測試帳號02"), false);
     assert.equal(serialized.includes("irreversible-hash"), true);
   });
+
+  test("insert 僅新增一列並完成 read-back verification", async () => {
+    const fake = authFixture([fixture()]);
+    const result = await adapter(fake, { allowInsert: true }).write({
+      office: "測試處", title: "", name: "陳範例", lineName: "測試帳號03",
+      subject: "", ext: "", inSmallGroup: ""
+    });
+    assert.equal(result.action, "insert");
+    assert.equal(fake.rows.length, 2);
+    assert.equal(fake.calls.filter((call) => call.method === "POST").length, 1);
+    assert.equal(fake.calls.filter((call) => call.method === "GET").length, 2);
+    assert.deepEqual(fake.rows[1], ["測試處", "", "陳範例", "測試帳號03", "", "", "未加入"]);
+  });
+
+  test("並行同名新資料只 insert 一列，第二請求重新讀取後 update", async () => {
+    const fake = authFixture([fixture()]);
+    const writer = adapter(fake, { allowInsert: true, lock: new MemoryWriteLock() });
+    const results = await Promise.all([
+      writer.write({ name: "林範例", lineName: "測試帳號A" }),
+      writer.write({ name: "林範例", lineName: "測試帳號B" })
+    ]);
+    assert.deepEqual(results.map((result) => result.action).sort(), ["insert", "update"]);
+    assert.equal(fake.calls.filter((call) => call.method === "POST").length, 1);
+    assert.equal(fake.calls.filter((call) => call.method === "PUT").length, 1);
+    assert.equal(fake.rows.filter((row) => row[2] === "林範例").length, 1);
+    assert.equal(fake.rows.length, 2);
+  });
 });

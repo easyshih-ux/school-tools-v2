@@ -36,7 +36,7 @@ function configuredHandler() {
           getSpreadsheetId: () => spreadsheetId.value(),
           lock: new FirestoreWriteLock(firestore),
           logger: functionsLogger,
-          allowInsert: false
+          allowInsert: true
         })
       : null;
     handler = createApi({

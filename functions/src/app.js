@@ -170,7 +170,9 @@ function createApi({
         return json(response, 200, {
           success: true,
           action: result.action === "insert" ? "add" : result.action,
-          message: supportsWrite ? "資料已成功更新。" : result.message,
+          message: supportsWrite
+            ? result.action === "insert" ? "資料已成功新增。" : "資料已成功更新。"
+            : result.message,
           simulated: !supportsWrite,
           persisted: supportsWrite
         }, "private, no-store");

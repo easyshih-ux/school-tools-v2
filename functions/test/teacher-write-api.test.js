@@ -70,7 +70,7 @@ describe("Gate 4B write API wiring", () => {
     assert.match(received.context.requestHash, /^[a-f0-9]{64}$/);
   });
 
-  test("正式第一階段 insert disabled 映射為 409", async () => {
+  test("若部署回滾為 insert disabled 仍安全映射為 409", async () => {
     const handler = makeHandler(async () => { throw new SheetsWriteError("insert_not_enabled"); });
     const response = await invoke(handler, requestMock({ headers: authorization(), body: { name: "新範例" } }));
     assert.equal(response.statusCode, 409);
@@ -97,5 +97,23 @@ describe("Gate 4B write API wiring", () => {
     assert.equal(response.statusCode, 502);
     assert.deepEqual(JSON.parse(response.body), { error: "sheet_write_permission_denied" });
     assert.equal(response.body.includes("sensitive"), false);
+  });
+
+  test("正式 insert 回傳原版相容 add 與不含姓名的成功訊息", async () => {
+    const handler = makeHandler(async () => ({
+      action: "insert",
+      message: "fixture message",
+      validation: { valid: true, errors: [] }
+    }));
+    const response = await invoke(handler, requestMock({
+      headers: authorization(),
+      body: { name: "新範例", lineName: "測試帳號03" }
+    }));
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(body.action, "add");
+    assert.equal(body.persisted, true);
+    assert.equal(body.message, "資料已成功新增。");
+    assert.doesNotMatch(body.message, /新範例|測試帳號03/);
   });
 });
