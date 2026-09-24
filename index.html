@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="義學國中 LINE 帳號查詢系統 V2 測試介面">
+  <title>義學國中 LINE 帳號查詢與自填系統</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="glowing-orbs-container" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="theme-toggle-container">
+    <button class="btn-theme-toggle" id="btnThemeToggle" type="button" aria-label="切換深色模式" title="切換深色/淺色模式">
+      <i class="fa-solid fa-moon" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="container" id="mainContainer">
+    <header>
+      <div class="title-wrapper">
+        <i class="fa-solid fa-address-book logo-icon" aria-hidden="true"></i>
+        <h1>義學國中 LINE 帳號查詢</h1>
+      </div>
+      <p class="subtitle">全校同仁專屬通訊錄 • 隨手查、方便加，新進人員可即時自填與更新</p>
+      <div class="group-tip">
+        <span>💡 名字下有「<span class="group-tip-badge"><i class="fa-solid fa-users" aria-hidden="true"></i> 義中人</span>」＝ 可直接到「義中人」群組聯繫</span>
+      </div>
+    </header>
+
+    <section class="controls-wrapper" aria-label="查詢與篩選">
+      <h2 class="section-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> 直接查詢</h2>
+      <div class="filter-tags-container" id="filterTags">
+        <button class="filter-tag active" type="button" data-office="all">全部處室</button>
+        <button class="filter-tag" type="button" data-office="教務處">教務處</button>
+        <button class="filter-tag" type="button" data-office="學務處">學務處</button>
+        <button class="filter-tag" type="button" data-office="體育組">體育組</button>
+        <button class="filter-tag" type="button" data-office="總務處">總務處</button>
+        <button class="filter-tag" type="button" data-office="輔導處">輔導處</button>
+        <button class="filter-tag" type="button" data-office="特教辦公室">特教辦公室</button>
+        <button class="filter-tag" type="button" data-office="七導">七導辦公室</button>
+        <button class="filter-tag" type="button" data-office="八導">八導辦公室</button>
+        <button class="filter-tag" type="button" data-office="九導">九導辦公室</button>
+        <button class="filter-tag" type="button" data-office="三專">三專辦公室</button>
+        <button class="filter-tag" type="button" data-office="五專">五專辦公室</button>
+        <button class="filter-tag" type="button" data-office="其他">校長/人會</button>
+      </div>
+
+      <h2 class="section-title"><i class="fa-solid fa-keyboard" aria-hidden="true"></i> 輸入查詢</h2>
+      <div class="search-box-container">
+        <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+        <input type="search" id="searchInput" class="search-input" placeholder="輸入姓名、任教科目、分機或職稱進行搜尋..." autocomplete="off">
+        <button id="btnClearSearch" class="btn-clear-search" type="button" aria-label="清除搜尋" title="清除搜尋">
+          <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="stats-info" aria-live="polite"><span id="statsCount">正在讀取通訊錄...</span></div>
+
+      <h2 class="section-title"><i class="fa-solid fa-user-pen" aria-hidden="true"></i> 更新資料</h2>
+      <button class="btn-action-main" id="btnOpenModal" type="button">
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> 新增 / 更新我的資料
+      </button>
+    </section>
+
+    <div class="skeleton-grid" id="skeletonLoader" aria-label="載入中">
+      <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line badge"></div><div class="skeleton-line body"></div><div class="skeleton-line body"></div></div>
+      <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line badge"></div><div class="skeleton-line body"></div><div class="skeleton-line body"></div></div>
+      <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line badge"></div><div class="skeleton-line body"></div><div class="skeleton-line body"></div></div>
+    </div>
+    <main class="cards-grid" id="cardsGrid" hidden></main>
+
+    <footer><p>© 義學國中 LINE 帳號查詢系統</p></footer>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> 填寫我的資料</h2>
+        <button class="btn-close-modal" id="btnCloseModal" type="button" aria-label="關閉視窗"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <p class="test-mode-note"><i class="fa-solid fa-flask" aria-hidden="true"></i> V2 測試模式：送出內容不會寫入正式資料。</p>
+      <form id="teacherForm">
+        <div class="form-group">
+          <label class="form-label" for="formName">真實姓名 <span>*</span></label>
+          <input type="text" id="formName" class="form-control" placeholder="例如：王小明" required maxlength="30">
+          <div class="form-help">測試時請只填寫虛構資料。</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formOffice">坐在哪個辦公室 / 處室 <span>*</span></label>
+          <select id="formOffice" class="form-control" required>
+            <option value="">請選擇處室</option>
+            <option>教務處</option><option>學務處</option><option>體育組</option><option>總務處</option>
+            <option>輔導處</option><option>特教辦公室</option><option>七導辦公室</option><option>八導辦公室</option>
+            <option>九導辦公室</option><option>三專辦公室</option><option>五專辦公室</option><option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formTitle">職稱</label>
+          <input type="text" id="formTitle" class="form-control" placeholder="例如：導師、組長、專任教師" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formLineName">LINE 顯示名稱 <span>*</span></label>
+          <input type="text" id="formLineName" class="form-control" placeholder="例如：測試帳號01" required maxlength="50">
+          <div class="form-help">「不是」搜尋好友 ID；測試時請勿輸入真實帳號。</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formSubject">任教科目 / 業務</label>
+          <input type="text" id="formSubject" class="form-control" placeholder="例如：國文、數學、行政" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formExt">分機號碼</label>
+          <input type="text" id="formExt" class="form-control" placeholder="測試資料請使用 T-001 格式" pattern="T-[0-9]{3}" maxlength="5">
+          <div class="form-help">Gate 2 僅接受 T-001 格式的虛構測試分機。</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="formInSmallGroup">是否已加入「義中人」群組？ <span>*</span></label>
+          <select id="formInSmallGroup" class="form-control" required>
+            <option value="">請選擇</option><option value="已加入">已加入</option><option value="未加入">未加入</option>
+          </select>
+        </div>
+        <div class="form-footer">
+          <button type="button" class="btn-secondary" id="btnCancel">取消</button>
+          <button type="submit" class="btn-submit" id="btnSubmit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> 送出資料</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="notice-overlay" id="noticeOverlay" aria-hidden="true">
+    <div class="notice-card" role="alertdialog" aria-modal="true" aria-labelledby="noticeTitle">
+      <div class="notice-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></div>
+      <h2 id="noticeTitle">V2 測試模式</h2>
+      <p id="noticeMessage">目前不會寫入正式資料。</p>
+      <button class="btn-submit" id="btnCloseNotice" type="button">我知道了</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
