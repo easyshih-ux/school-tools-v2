@@ -145,7 +145,7 @@ describe("Gate 5 service worker safety", () => {
   const worker = read("sw.js");
 
   test("明確版本 cache 且 activate 刪除舊版本", () => {
-    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v3"/);
+    assert.match(worker, /CACHE_VERSION = "school-tools-v2-shell-v4"/);
     assert.match(worker, /key !== CACHE_VERSION/);
     assert.match(worker, /caches\.delete\(key\)/);
   });
