@@ -3,6 +3,7 @@
 const DEVICE_SESSION_DB = "school-tools-v2-device-session";
 const DEVICE_SESSION_STORE = "auth";
 const DEVICE_CREDENTIAL_KEY = "deviceCredential";
+const DEVICE_CREDENTIAL_FALLBACK_KEY = "school-tools-device-credential";
 
 function openDeviceSessionDatabase(indexedDb = globalThis.indexedDB) {
   if (!indexedDb || typeof indexedDb.open !== "function") {
@@ -39,27 +40,61 @@ async function withDeviceSessionStore(mode, operation, indexedDb = globalThis.in
   }
 }
 
-async function getDeviceCredential(indexedDb) {
-  const value = await withDeviceSessionStore(
-    "readonly",
-    (store) => store.get(DEVICE_CREDENTIAL_KEY),
-    indexedDb
-  );
-  return typeof value === "string" && value.length <= 128 ? value : null;
+function validCredential(value) {
+  return typeof value === "string" && value.length > 0 && value.length <= 128;
 }
 
-async function saveDeviceCredential(credential, indexedDb) {
-  if (typeof credential !== "string" || !credential || credential.length > 128) {
-    throw new Error("invalid_device_credential");
+function fallbackStorage(storage = globalThis.localStorage) {
+  return storage && typeof storage.getItem === "function" && typeof storage.setItem === "function"
+    ? storage
+    : null;
+}
+
+async function getDeviceCredential(indexedDb = globalThis.indexedDB, storage = globalThis.localStorage) {
+  try {
+    const value = await withDeviceSessionStore(
+      "readonly",
+      (store) => store.get(DEVICE_CREDENTIAL_KEY),
+      indexedDb
+    );
+    if (validCredential(value)) return value;
+  } catch {
+    // Some installed browser shells block IndexedDB; use same-origin persistent storage below.
   }
-  await withDeviceSessionStore(
-    "readwrite",
-    (store) => store.put(credential, DEVICE_CREDENTIAL_KEY),
-    indexedDb
-  );
+  try {
+    const value = fallbackStorage(storage)?.getItem(DEVICE_CREDENTIAL_FALLBACK_KEY);
+    return validCredential(value) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
-async function clearDeviceCredential(indexedDb) {
+async function saveDeviceCredential(credential, indexedDb = globalThis.indexedDB, storage = globalThis.localStorage) {
+  if (!validCredential(credential)) throw new Error("invalid_device_credential");
+  let saved = false;
+  try {
+    await withDeviceSessionStore(
+      "readwrite",
+      (store) => store.put(credential, DEVICE_CREDENTIAL_KEY),
+      indexedDb
+    );
+    saved = true;
+  } catch {
+    // Continue to the persistent fallback used by installed browser shells.
+  }
+  try {
+    const fallback = fallbackStorage(storage);
+    if (fallback) {
+      fallback.setItem(DEVICE_CREDENTIAL_FALLBACK_KEY, credential);
+      saved = true;
+    }
+  } catch {
+    // IndexedDB may still have saved the credential.
+  }
+  if (!saved) throw new Error("device_credential_storage_unavailable");
+}
+
+async function clearDeviceCredential(indexedDb = globalThis.indexedDB, storage = globalThis.localStorage) {
   try {
     await withDeviceSessionStore(
       "readwrite",
@@ -69,11 +104,13 @@ async function clearDeviceCredential(indexedDb) {
   } catch {
     // Clearing local authentication state is best-effort when storage itself is unavailable.
   }
+  try { fallbackStorage(storage)?.removeItem(DEVICE_CREDENTIAL_FALLBACK_KEY); } catch { /* best effort */ }
 }
 
 if (typeof module !== "undefined") {
   module.exports = {
     DEVICE_CREDENTIAL_KEY,
+    DEVICE_CREDENTIAL_FALLBACK_KEY,
     DEVICE_SESSION_DB,
     DEVICE_SESSION_STORE,
     clearDeviceCredential,

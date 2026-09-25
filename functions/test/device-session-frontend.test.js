@@ -7,6 +7,7 @@ const vm = require("node:vm");
 const { describe, test } = require("node:test");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "..", "..", "api-client.js"), "utf8");
+const deviceStore = require("../../device-session-store");
 
 function httpResponse(status, body) {
   return { status, ok: status >= 200 && status < 300, json: async () => body };
@@ -145,6 +146,19 @@ describe("Gate 5.5 frontend restore flow", () => {
     assert.equal(app.token(), null);
   });
 
+  test("installed app persists credential when IndexedDB is unavailable", async () => {
+    const values = new Map();
+    const storage = {
+      getItem: (key) => values.has(key) ? values.get(key) : null,
+      setItem: (key, value) => values.set(key, String(value)),
+      removeItem: (key) => values.delete(key)
+    };
+    const credential = "a".repeat(32) + "." + "b".repeat(43);
+    await deviceStore.saveDeviceCredential(credential, null, storage);
+    assert.equal(await deviceStore.getDeviceCredential(null, storage), credential);
+    await deviceStore.clearDeviceCredential(null, storage);
+    assert.equal(await deviceStore.getDeviceCredential(null, storage), null);
+  });
   test("source never persists password, access token, or teacher data", () => {
     assert.doesNotMatch(SOURCE, /localStorage|sessionStorage/);
     const persistedArgument = SOURCE.match(/saveDeviceCredential\(([^)]+)\)/g) || [];
