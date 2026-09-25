@@ -128,10 +128,15 @@ footer .pwa-brand { display: inline-block; margin-top: .45rem; padding: .22rem .
 .install-helper { margin: .42rem 0 0; color: var(--text-muted); font-size: .78rem; line-height: 1.35; letter-spacing: .02em; }
 .btn-install-app[hidden] + .install-helper { display: none; }
 .install-overlay { z-index: 1250; }
-.install-card { width: min(480px, 100%); background: var(--bg-container); backdrop-filter: blur(24px); }
-.install-guide-text { color: var(--text-muted); font-size: 1rem; line-height: 1.75; white-space: pre-line; }
+.install-card { width: min(480px, 100%); background: var(--bg-main); border-color: rgba(100, 116, 139, .28); backdrop-filter: none; }
+.install-guide-text { color: var(--text-main); font-size: 1rem; font-weight: 500; line-height: 1.75; white-space: pre-line; }
+.install-guide-text strong { color: var(--text-main); font-weight: 800; }
+.install-guide-text .install-guide-critical { color: #dc2626; }
+.dark-theme .install-guide-text .install-guide-critical { color: #f87171; }
 .install-guide-actions { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
-.install-guide-actions .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
+.install-guide-actions .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; background: #06c755; color: #fff; box-shadow: 0 8px 18px rgba(6, 199, 85, .24); }
+.install-guide-actions .btn-secondary:hover { background: #05a847; }
+.dark-theme .install-guide-actions .btn-secondary { background: #06c755; color: #fff; }
 .install-copy-status { min-height: 1.4em; margin-top: .75rem; color: #02773c; font-size: .86rem; font-weight: 700; }
 .dark-theme .install-copy-status { color: #86efac; }
 @media (max-width: 768px) {

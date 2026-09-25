@@ -41,17 +41,28 @@ function installGuideFor(environment) {
     return "請先用 Safari 開啟，再點選 Safari「分享」→「加入主畫面」。";
   }
   if (environment.kind === "in-app" && environment.isAndroid) {
-    return "請先用 Chrome 開啟，再選擇「安裝應用程式」或「加到主畫面」。";
+    return "① 點下方「複製網址」，改用 Chrome 開啟。\n② 在 Chrome 出現此頁後，再按一次綠色「一鍵放桌面」按鈕。\n③ 若沒有跳出安裝視窗，點 Chrome 右上角「⋮」→「安裝並建立捷徑」（部分版本顯示「安裝應用程式」或「加到主畫面」）。";
   }
   if (environment.kind === "in-app") {
     return "請複製網址後，以 Safari 或 Chrome 開啟並加入主畫面。";
   }
   if (environment.kind === "android-chrome") {
-    return "若未出現安裝視窗，請開啟 Chrome 選單，選擇「安裝應用程式」或「加到主畫面」。";
+    return "若未出現安裝視窗，請點 Chrome 右上角「⋮」→「安裝並建立捷徑」（部分版本顯示「安裝應用程式」或「加到主畫面」）。";
   }
   return "此瀏覽器目前未提供安裝功能。";
 }
 
+function installGuideMarkupFor(environment) {
+  let markup = installGuideFor(environment)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+  markup = markup.replaceAll("安裝並建立捷徑", '<strong class="install-guide-critical">安裝並建立捷徑</strong>');
+  for (const phrase of ["複製網址", "Chrome", "再按一次", "一鍵放桌面", "⋮"]) {
+    markup = markup.replaceAll(phrase, `<strong>${phrase}</strong>`);
+  }
+  return markup;
+}
 function isStandaloneDisplay(windowObject, navigatorObject) {
   return Boolean(navigatorObject.standalone) ||
     windowObject.matchMedia("(display-mode: standalone)").matches;
@@ -89,7 +100,7 @@ function initializeInstallUi(windowObject = window, navigatorObject = navigator,
   }
 
   function showGuide() {
-    guide.textContent = installGuideFor(environment);
+    guide.innerHTML = installGuideMarkupFor(environment);
     copy.hidden = environment.kind !== "in-app";
     copyStatus.textContent = "";
     overlay.classList.add("active");
