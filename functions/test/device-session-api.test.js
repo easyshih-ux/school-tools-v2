@@ -90,6 +90,24 @@ describe("Gate 5.5 device session API", () => {
     assert.equal(JSON.stringify(payload).includes(password), false);
   });
 
+  test("successful password logins are not counted as failed attempts", async () => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const response = await login();
+      assert.equal(response.statusCode, 200);
+    }
+  });
+
+  test("successful installed-app refreshes are not rate limited", async () => {
+    let credential = body(await login()).deviceCredential;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      nowMs += 1000;
+      const response = await invoke(handler, request("/auth/refresh", {
+        body: { deviceCredential: credential }
+      }));
+      assert.equal(response.statusCode, 200);
+      credential = body(response).deviceCredential;
+    }
+  });
   test("refresh rotates credentials and returns a fresh 30-minute access token", async () => {
     const initial = body(await login());
     nowMs += 1000;

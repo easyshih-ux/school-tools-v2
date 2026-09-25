@@ -159,8 +159,6 @@ function createApi({
         response.setHeader("Allow", "POST, OPTIONS");
         return json(response, 405, { error: "method_not_allowed" }, "no-store");
       }
-      if (!await rateAllowed("password", request, response)) return;
-
       const password = passwordFrom(request);
       if (typeof password !== "string" || password.trim().length === 0 || password.length > 256) {
         return json(response, 400, { error: "password_required" }, "no-store");
@@ -168,6 +166,7 @@ function createApi({
 
       try {
         if (!passwordMatches(password, getAccessPassword())) {
+          if (!await rateAllowed("password", request, response)) return;
           return json(response, 401, { error: "invalid_credentials" }, "no-store");
         }
         const created = await deviceSessions.create({
@@ -190,10 +189,9 @@ function createApi({
         response.setHeader("Allow", "POST, OPTIONS");
         return json(response, 405, { error: "method_not_allowed" }, "no-store");
       }
-      if (!await rateAllowed("refresh", request, response)) return;
-
       const credential = credentialFrom(request);
       if (typeof credential !== "string" || !credential || credential.length > 128) {
+        if (!await rateAllowed("refresh", request, response)) return;
         return json(response, 401, { error: "device_session_invalid" }, "no-store");
       }
       try {
@@ -210,6 +208,7 @@ function createApi({
         }, "no-store");
       } catch (error) {
         if (error instanceof DeviceSessionError) {
+          if (!await rateAllowed("refresh", request, response)) return;
           return json(response, 401, { error: "device_session_invalid" }, "no-store");
         }
         return json(response, 503, { error: "authentication_temporarily_unavailable" }, "no-store");
